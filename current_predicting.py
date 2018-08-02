@@ -6,7 +6,7 @@
 
 print(__doc__)
 import numpy as np
-
+from time import sleep
 
 # In[2]:
 
@@ -64,7 +64,7 @@ class gis_electric(Base):
 
 # In[5]:
 
-
+svc=joblib.load('gis_anomaly_detection.pkl')
 engine = create_engine("mysql+pymysql://root:newpassword@localhost:3306/substation_anomaly_detection", encoding="utf8", echo=False)
 DBSession = sessionmaker(bind=engine)
 
@@ -73,50 +73,36 @@ DBSession = sessionmaker(bind=engine)
 
 
 # 创建Se;ssion:
-
-session = DBSession()
-dataset = session.query(gis_electric).filter_by(fault_probability=None).all()
-datanum=session.query(gis_electric).filter_by(fault_probability=None).count()
-x=np.zeros(shape=(datanum,11)) 
-i=0
-for data in dataset:
-    x[i,0]=data.line_voltage
-    x[i,1]=data.point_discharge
-    x[i,2]=data.void_discharge
-    x[i,3]=data.suspended_discharge
-    x[i,4]=data.surface_discharge
-    x[i,5]=data.pd_capacitance
-    x[i,6]=data.Dielectric_loss_tan
-    x[i,7]=data.tube_capacitance
-    x[i,8]=data.tube_resistance
-    x[i,9]=data.core_resistance
-    x[i,10]=data.core_current
-    i+=1
-
-
-# # 装载模型并输出预测
-
-# In[9]:
-
-
-svc=joblib.load('gis_anomaly_detection.pkl')
-dec = svc.predict_proba(x)
-i=0
-for data in dataset:
-    data.fault_probability=float(dec[i][1])
-    i+=1
+while(1):
+	session = DBSession()
+	dataset = session.query(gis_electric).filter_by(fault_probability=None).all()
+	datanum=session.query(gis_electric).filter_by(fault_probability=None).count()
+	if datanum != 0:
+		x=np.zeros(shape=(datanum,11)) 
+		i=0
+		for data in dataset:
+		    x[i,0]=data.line_voltage
+		    x[i,1]=data.point_discharge
+		    x[i,2]=data.void_discharge
+		    x[i,3]=data.suspended_discharge
+		    x[i,4]=data.surface_discharge
+		    x[i,5]=data.pd_capacitance
+		    x[i,6]=data.Dielectric_loss_tan
+		    x[i,7]=data.tube_capacitance
+		    x[i,8]=data.tube_resistance
+		    x[i,9]=data.core_resistance
+		    x[i,10]=data.core_current
+		    i+=1
+		dec = svc.predict_proba(x)
+		i=0
+		for data in dataset:
+		    data.fault_probability=float(dec[i][1])
+		    i+=1
 
 
-# In[10]:
+	session.commit()
 
 
-# 提交即保存到数据库:
-session.commit()
-
-
-# In[11]:
-
-
-# 关闭Session:
-session.close()
+	session.close()
+	sleep(15)
 
