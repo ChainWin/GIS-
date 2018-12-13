@@ -61,19 +61,9 @@ class gis_electric(Base):
     def __repr__(self):
         return '%r' % (self.id)
 
-
-# In[5]:
-
-
 engine = create_engine("mysql+pymysql://root:newpassword@localhost:3306/substation_anomaly_detection", encoding="utf8", echo=False)
 DBSession = sessionmaker(bind=engine)
-
-
-# In[6]:
-
-
-# 创建Se;ssion:
-
+# 创建Session:
 session = DBSession()
 dataset = session.query(gis_electric).filter_by(fault_probability=None).all()
 datanum=session.query(gis_electric).filter_by(fault_probability=None).count()
@@ -106,17 +96,8 @@ for data in dataset:
     data.fault_probability=float(dec[i][1])
     i+=1
 
-
-# In[10]:
-
-
 # 提交即保存到数据库:
 session.commit()
-
-
-# In[11]:
-
-
 # 关闭Session:
 session.close()
 
